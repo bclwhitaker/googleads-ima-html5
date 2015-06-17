@@ -44,6 +44,7 @@ Ads.prototype.requestAds = function(adTagUrl) {
   adsRequest.linearAdSlotHeight = this.videoPlayer_.height;
   adsRequest.nonLinearAdSlotWidth = this.videoPlayer_.width;
   adsRequest.nonLinearAdSlotHeight = this.videoPlayer_.height;
+  this.adsLoader_.getSettings().setAutoPlayAdBreaks(false);
   this.adsLoader_.requestAds(adsRequest);
 };
 
@@ -80,6 +81,11 @@ Ads.prototype.onAdsManagerLoaded_ = function(adsManagerLoadedEvent) {
 Ads.prototype.processAdsManager_ = function(adsManager) {
   // Attach the pause/resume events.
   adsManager.addEventListener(
+      google.ima.AdEvent.Type.AD_BREAK_READY,
+      this.onAdBreakReady_,
+      false,
+      this);
+  adsManager.addEventListener(
       google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED,
       this.onContentPauseRequested_,
       false,
@@ -97,6 +103,7 @@ Ads.prototype.processAdsManager_ = function(adsManager) {
       this);
   var events = [google.ima.AdEvent.Type.ALL_ADS_COMPLETED,
                 google.ima.AdEvent.Type.CLICK,
+                google.ima.AdEvent.Type.AD_BREAK_READY,
                 google.ima.AdEvent.Type.COMPLETE,
                 google.ima.AdEvent.Type.FIRST_QUARTILE,
                 google.ima.AdEvent.Type.LOADED,
@@ -125,14 +132,23 @@ Ads.prototype.processAdsManager_ = function(adsManager) {
     initHeight,
     google.ima.ViewMode.NORMAL);
 
-  adsManager.start();
+  //adsManager.start();
 };
 
 Ads.prototype.onContentPauseRequested_ = function(adErrorEvent) {
-  this.application_.pauseForAd();
+  this.application_.log('onContentPauseRequested_');
+  //this.application_.pauseForAd();
+
+  this.adsManager_.stop();
+  //Shouldn't contentResume get called if we stop the admanager, so that this
+  //code below isn't necessary here?
+  if (!this.contentCompleteCalled_) {
+    this.application_.resumeAfterAd();
+  }
 };
 
 Ads.prototype.onContentResumeRequested_ = function(adErrorEvent) {
+  this.application_.log('onContentResumeRequested_');
   // Without this check the video starts over from the beginning on a
   // post-roll's CONTENT_RESUME_REQUESTED
   if (!this.contentCompleteCalled_) {
@@ -142,7 +158,6 @@ Ads.prototype.onContentResumeRequested_ = function(adErrorEvent) {
 
 Ads.prototype.onAdEvent_ = function(adEvent) {
   this.application_.log('Ad event: ' + adEvent.type);
-
   if (adEvent.type == google.ima.AdEvent.Type.CLICK) {
     this.application_.adClicked();
   }
@@ -155,3 +170,7 @@ Ads.prototype.onAdError_ = function(adErrorEvent) {
   }
   this.application_.resumeAfterAd();
 };
+
+Ads.prototype.onAdBreakReady_ = function(adEvent) {
+  this.adsManager_.start();
+}
