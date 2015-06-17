@@ -10,6 +10,7 @@ var Ads = function(application, videoPlayer) {
   this.application_ = application;
   this.videoPlayer_ = videoPlayer;
   this.contentCompleteCalled_ = false;
+  this.adsManagerStarted_ = false;
   // Call setLocale() to localize language text and downloaded swfs
   // google.ima.settings.setLocale('fr');
   this.adDisplayContainer_ =
@@ -139,7 +140,7 @@ Ads.prototype.onContentPauseRequested_ = function(adErrorEvent) {
   this.application_.log('onContentPauseRequested_');
   //this.application_.pauseForAd();
 
-  this.adsManager_.stop();
+  this.adsManager_.pause();
   //Shouldn't contentResume get called if we stop the admanager, so that this
   //code below isn't necessary here?
   if (!this.contentCompleteCalled_) {
@@ -172,5 +173,10 @@ Ads.prototype.onAdError_ = function(adErrorEvent) {
 };
 
 Ads.prototype.onAdBreakReady_ = function(adEvent) {
-  this.adsManager_.start();
+  if (!this.adsManagerStarted_) {
+    this.adsManager_.start();
+    this.adsManagerStarted_ = true;
+  } else {
+    this.adsManager.resume();
+  }
 }
