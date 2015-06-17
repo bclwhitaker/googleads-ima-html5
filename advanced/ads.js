@@ -137,14 +137,15 @@ Ads.prototype.processAdsManager_ = function(adsManager) {
 
 Ads.prototype.onContentPauseRequested_ = function(adErrorEvent) {
   this.application_.log('onContentPauseRequested_');
-  //this.application_.pauseForAd();
+  this.application_.pauseForAd();
 
+  /*
   this.adsManager_.stop();
   //Shouldn't contentResume get called if we stop the admanager, so that this
   //code below isn't necessary here?
   if (!this.contentCompleteCalled_) {
     this.application_.resumeAfterAd();
-  }
+  }*/
 };
 
 Ads.prototype.onContentResumeRequested_ = function(adErrorEvent) {
