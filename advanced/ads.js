@@ -10,6 +10,7 @@ var Ads = function(application, videoPlayer) {
   this.application_ = application;
   this.videoPlayer_ = videoPlayer;
   this.contentCompleteCalled_ = false;
+  this.isPreroll_ = true;
   // Call setLocale() to localize language text and downloaded swfs
   // google.ima.settings.setLocale('fr');
   this.adDisplayContainer_ =
@@ -86,6 +87,11 @@ Ads.prototype.processAdsManager_ = function(adsManager) {
       false,
       this);
   adsManager.addEventListener(
+      google.ima.AdEvent.Type.LOADED,
+      this.onAdLoaded_,
+      false,
+      this);
+  adsManager.addEventListener(
       google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED,
       this.onContentPauseRequested_,
       false,
@@ -137,11 +143,8 @@ Ads.prototype.processAdsManager_ = function(adsManager) {
 
 Ads.prototype.onContentPauseRequested_ = function(adErrorEvent) {
   this.application_.log('onContentPauseRequested_');
-  //this.application_.pauseForAd();
+  this.application_.pauseForAd();
 
-  this.adsManager_.stop();
-  //Shouldn't contentResume get called if we stop the admanager, so that this
-  //code below isn't necessary here?
   if (!this.contentCompleteCalled_) {
     this.application_.resumeAfterAd();
   }
@@ -170,6 +173,14 @@ Ads.prototype.onAdError_ = function(adErrorEvent) {
   }
   this.application_.resumeAfterAd();
 };
+
+Ads.prototype.onAdLoaded_ = function(adEvent) {
+  console.log('ad loaded fired');
+  if (this.isPreroll_) {
+    this.isPreroll_ = false;
+    this.adsManager_.stop();
+  }
+}
 
 Ads.prototype.onAdBreakReady_ = function(adEvent) {
   this.adsManager_.start();
